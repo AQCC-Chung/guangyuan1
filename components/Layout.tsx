@@ -5,7 +5,6 @@ import { useLocation, useNavigate } from 'react-router-dom';
 
 interface LayoutProps {
   children: React.ReactNode;
-  title: string;
   role: UserRole;
   onLogout: () => void;
 }
@@ -23,7 +22,7 @@ const MENU_ITEMS = [
   { label: '管理後台', path: '/admin', icon: ShieldCheck, roles: [UserRole.ADMIN] },
 ];
 
-export const MobileLayout: React.FC<LayoutProps> = ({ children, title, role, onLogout }) => {
+export const MobileLayout: React.FC<LayoutProps> = ({ children, role, onLogout }) => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
@@ -35,12 +34,24 @@ export const MobileLayout: React.FC<LayoutProps> = ({ children, title, role, onL
     setIsDrawerOpen(false);
   };
 
+  const getTitle = () => {
+    const path = location.pathname;
+    if (path.startsWith('/courses')) return '共學課程';
+    if (path.startsWith('/shop')) return '共生商城';
+    if (path === '/orders') return '我的訂單';
+    if (path === '/passbook') return '數位存摺';
+    if (path === '/rewards') return '獎金透明';
+    if (path === '/referral') return '推廣中心';
+    if (path === '/admin') return '管理後台';
+    if (path === '/teacher/studio') return '內容管理';
+    return '首頁';
+  };
+
+  const title = getTitle();
   const filteredMenu = MENU_ITEMS.filter(item => item.roles.includes(role));
 
   // Dynamic Tab Bar based on Role
   const renderTabBar = () => {
-    const commonProps = { isActive: false, onClick: () => {} }; // Helper to keep TS happy, logic below
-    
     // 1. Member: Home / Courses / Shop / Orders
     if (role === UserRole.MEMBER) {
       return (

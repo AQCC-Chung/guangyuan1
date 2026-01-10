@@ -32,7 +32,7 @@ const App: React.FC = () => {
 
   return (
     <Router>
-      <MobileLayout title={getPageTitle()} role={role} onLogout={handleLogout}>
+      <MobileLayout role={role} onLogout={handleLogout}>
         <Routes>
           <Route path="/" element={<Dashboard role={role} />} />
           <Route path="/courses" element={<CourseList />} />
@@ -52,18 +52,5 @@ const App: React.FC = () => {
     </Router>
   );
 };
-
-// Helper to update header title based on rough path
-function getPageTitle() {
-  const hash = window.location.hash;
-  if (hash.includes('courses')) return '共學課程';
-  if (hash.includes('shop')) return '共生商城';
-  if (hash.includes('orders')) return '我的訂單';
-  if (hash.includes('passbook')) return '數位存摺';
-  if (hash.includes('rewards')) return '獎金透明';
-  if (hash.includes('referral')) return '推廣中心';
-  if (hash.includes('admin')) return '管理後台';
-  return '首頁';
-}
 
 export default App;
