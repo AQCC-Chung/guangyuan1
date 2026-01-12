@@ -4,6 +4,10 @@ import { UserRole, User } from '../types';
 import { AuthService } from '../services/auth';
 import { ArrowRight, Mail, Lock, User as UserIcon, Phone, AlertCircle, ShieldCheck, TrendingUp, Users, GraduationCap, Star, Loader2 } from 'lucide-react';
 
+// Validation Regex
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const PHONE_REGEX = /^09\d{8}$/;
+
 export const Landing: React.FC<{ onStart: () => void }> = ({ onStart }) => {
   return (
     <div className="min-h-screen bg-[#FAF9F6] font-sans flex flex-col">
@@ -49,12 +53,20 @@ export const Login: React.FC<{ onLogin: (user: User) => void }> = ({ onLogin }) 
 
     try {
       if (isRegister) {
+        // Registration Validation
         if (!name || !email || !phone || !password) throw new Error('請填寫所有必填欄位');
+
+        if (!EMAIL_REGEX.test(email)) throw new Error('電子信箱格式不正確');
+        if (!PHONE_REGEX.test(phone)) throw new Error('手機號碼格式錯誤 (需為 09 開頭共 10 碼)');
         if (password.length < 6) throw new Error('密碼長度至少需 6 碼');
+
         const user = await AuthService.register(name, email, password, role, phone);
         onLogin(user);
       } else {
+        // Login Validation
         if (!targetEmail || !targetPass) throw new Error('請輸入帳號與密碼');
+        if (!EMAIL_REGEX.test(targetEmail)) throw new Error('電子信箱格式不正確');
+
         const user = await AuthService.login(targetEmail, targetPass);
         onLogin(user);
       }
@@ -81,13 +93,13 @@ export const Login: React.FC<{ onLogin: (user: User) => void }> = ({ onLogin }) 
           <p className="text-xs text-gray-400 mt-2">使用 Google Sheets 作為雲端資料庫</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4" noValidate>
           {error && <div className="bg-red-50 text-red-600 p-3 rounded-xl text-xs flex items-center gap-2 border border-red-100 animate-pulse"><AlertCircle className="w-4 h-4"/>{error}</div>}
           
           {isRegister && (
             <>
               <InputGroup icon={UserIcon} type="text" placeholder="真實姓名" value={name} onChange={(e:any) => setName(e.target.value)} disabled={loading} />
-              <InputGroup icon={Phone} type="tel" placeholder="手機號碼" value={phone} onChange={(e:any) => setPhone(e.target.value)} disabled={loading} />
+              <InputGroup icon={Phone} type="tel" placeholder="手機號碼" value={phone} onChange={(e:any) => setPhone(e.target.value)} disabled={loading} maxLength={10} />
               <div className="grid grid-cols-2 gap-2 pb-2">
                 {[UserRole.MEMBER, UserRole.INVESTOR, UserRole.PROMOTER, UserRole.TEACHER].map(r => (
                   <button 
