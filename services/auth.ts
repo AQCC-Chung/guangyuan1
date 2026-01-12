@@ -14,6 +14,42 @@ const DEMO_USERS: Record<string, User> = {
   'teacher@test.com': { id: 'user-teacher', name: '廣圓老師', email: 'teacher@test.com', role: UserRole.TEACHER, level: '特約講師', points: 300, avatar: 'https://ui-avatars.com/api/?name=Teacher&background=indigo', streak: 15, phoneNumber: '0944444444' }
 };
 
+// Helper function for safe GAS fetching
+const safeFetch = async (payload: any) => {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout
+
+  try {
+    const response = await fetch(GOOGLE_SCRIPT_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'text/plain;charset=utf-8',
+      },
+      body: JSON.stringify(payload),
+      signal: controller.signal,
+    });
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+        throw new Error(`HTTP Error: ${response.status}`);
+    }
+
+    const text = await response.text();
+    try {
+      return JSON.parse(text);
+    } catch (e) {
+      console.error('GAS Parse Error:', text.substring(0, 100)); // Log first 100 chars
+      throw new Error('伺服器回應格式錯誤 (可能為維護中)');
+    }
+  } catch (error: any) {
+    clearTimeout(timeoutId);
+    if (error.name === 'AbortError') {
+      throw new Error('請求逾時，請檢查網路連線');
+    }
+    throw error;
+  }
+};
+
 export const AuthService = {
   getCurrentUser: (): User | null => {
     const json = localStorage.getItem(DB_KEY_CURRENT_USER);
@@ -33,17 +69,7 @@ export const AuthService = {
     }
 
     try {
-      // 使用 no-cors 模式發送請求 (Google Apps Script Web App 限制)
-      // 注意: GAS 必須部署為 "Anyone" 權限
-      const response = await fetch(GOOGLE_SCRIPT_URL, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'text/plain;charset=utf-8', 
-        },
-        body: JSON.stringify({ action: 'login', email, password }),
-      });
-
-      const result = await response.json();
+      const result = await safeFetch({ action: 'login', email, password });
       
       if (result.success) {
         localStorage.setItem(DB_KEY_CURRENT_USER, JSON.stringify(result.user));
@@ -51,9 +77,9 @@ export const AuthService = {
       } else {
         throw new Error(result.message || '帳號或密碼錯誤');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('API Login failed:', error);
-      throw error; 
+      throw new Error(error.message || '登入失敗');
     }
   },
 
@@ -76,25 +102,20 @@ export const AuthService = {
     };
 
     try {
-      const response = await fetch(GOOGLE_SCRIPT_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify({ 
-          action: 'register', 
-          user: { ...newUserBase, password } 
-        }),
+      const result = await safeFetch({
+        action: 'register',
+        user: { ...newUserBase, password }
       });
 
-      const result = await response.json();
       if (result.success) {
         localStorage.setItem(DB_KEY_CURRENT_USER, JSON.stringify(result.user));
         return result.user;
       } else {
         throw new Error(result.message || '註冊失敗');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Register error:', error);
-      throw new Error('無法連接伺服器，請檢查網路連線或稍後再試');
+      throw new Error(error.message || '無法連接伺服器，請檢查網路連線或稍後再試');
     }
   }
 };
