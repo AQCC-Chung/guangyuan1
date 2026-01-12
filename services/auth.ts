@@ -22,6 +22,8 @@ const safeFetch = async (payload: any) => {
   try {
     const response = await fetch(GOOGLE_SCRIPT_URL, {
       method: 'POST',
+      mode: 'cors', // Explicitly use CORS
+      credentials: 'omit', // Explicitly omit credentials for public script
       headers: {
         'Content-Type': 'text/plain;charset=utf-8',
       },
@@ -31,7 +33,8 @@ const safeFetch = async (payload: any) => {
     clearTimeout(timeoutId);
 
     if (!response.ok) {
-        throw new Error(`HTTP Error: ${response.status}`);
+        // GAS often returns 401 if permissions are wrong
+        throw new Error(`HTTP Error: ${response.status} (請檢查 Google Script 權限設定)`);
     }
 
     const text = await response.text();
@@ -45,6 +48,10 @@ const safeFetch = async (payload: any) => {
     clearTimeout(timeoutId);
     if (error.name === 'AbortError') {
       throw new Error('請求逾時，請檢查網路連線');
+    }
+    // Catch common CORS/Network errors
+    if (error.message === 'Failed to fetch' || error.message === 'Load failed') {
+        throw new Error('無法連接伺服器。請確認：\n1. Google Script 已部署為 "Anyone"\n2. 網址正確\n3. 網路連線正常');
     }
     throw error;
   }
