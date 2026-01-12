@@ -43,8 +43,19 @@ export const AuthService = {
         body: JSON.stringify({ action: 'login', email, password }),
       });
 
-      const result = await response.json();
+      const text = await response.text();
+      let result;
+      try {
+        result = JSON.parse(text);
+      } catch (e) {
+        console.error('Invalid JSON response:', text);
+        throw new Error('伺服器回應格式錯誤，請稍後再試');
+      }
       
+      if (!response.ok) {
+        throw new Error(result.message || `Server returned ${response.status} ${response.statusText}`);
+      }
+
       if (result.success) {
         localStorage.setItem(DB_KEY_CURRENT_USER, JSON.stringify(result.user));
         return result.user;
@@ -85,7 +96,19 @@ export const AuthService = {
         }),
       });
 
-      const result = await response.json();
+      const text = await response.text();
+      let result;
+      try {
+        result = JSON.parse(text);
+      } catch (e) {
+        console.error('Invalid JSON response:', text);
+        throw new Error('伺服器回應格式錯誤，請稍後再試');
+      }
+
+      if (!response.ok) {
+         throw new Error(result.message || `Server returned ${response.status} ${response.statusText}`);
+      }
+
       if (result.success) {
         localStorage.setItem(DB_KEY_CURRENT_USER, JSON.stringify(result.user));
         return result.user;
@@ -94,6 +117,8 @@ export const AuthService = {
       }
     } catch (error) {
       console.error('Register error:', error);
+      // If the error is already an Error object with a message, rethrow it
+      if (error instanceof Error) throw error;
       throw new Error('無法連接伺服器，請檢查網路連線或稍後再試');
     }
   }
