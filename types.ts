@@ -9,9 +9,22 @@ export enum UserRole {
 export interface User {
   id: string;
   name: string;
+  email: string;
+  phoneNumber?: string;
   role: UserRole;
+  level: string;
+  points: number;
+  referrerId?: string;
   avatar: string;
-  streak: number; // 連續學習天數
+  streak: number;
+  bio?: string;
+}
+
+export interface Chapter {
+  id: string;
+  title: string;
+  videoUrl: string;
+  duration: string;
 }
 
 export interface Course {
@@ -22,7 +35,11 @@ export interface Course {
   difficulty: '初階' | '中階' | '高階';
   benefit: string;
   category: string;
-  progress: number;
+  description?: string;
+  chapters?: Chapter[];
+  progress?: number;
+  status: 'published' | 'draft';
+  instructorId: string;
 }
 
 export interface AssetRecord {
@@ -38,8 +55,8 @@ export interface Product {
   price: number;
   image: string;
   tags: string[];
-  vendorDirect?: boolean; // 廠商直送
-  isPackage?: boolean; // 是否為套裝
+  vendorDirect?: boolean;
+  isPackage?: boolean;
 }
 
 export interface Order {

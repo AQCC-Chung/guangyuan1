@@ -14,7 +14,7 @@ const MENU_ITEMS = [
   { label: '首頁', path: '/', icon: Home, roles: [UserRole.MEMBER, UserRole.INVESTOR, UserRole.PROMOTER, UserRole.TEACHER, UserRole.ADMIN] },
   { label: '數位存摺', path: '/passbook', icon: CreditCard, roles: [UserRole.INVESTOR, UserRole.ADMIN] },
   { label: '共學課程', path: '/courses', icon: BookOpen, roles: [UserRole.MEMBER, UserRole.INVESTOR, UserRole.PROMOTER, UserRole.TEACHER, UserRole.ADMIN] },
-  { label: '內容管理', path: '/teacher/studio', icon: PenTool, roles: [UserRole.TEACHER, UserRole.ADMIN] }, // New for Teacher
+  { label: '內容管理', path: '/teacher/studio', icon: PenTool, roles: [UserRole.TEACHER, UserRole.ADMIN] },
   { label: '獎金透明', path: '/rewards', icon: Gift, roles: [UserRole.PROMOTER, UserRole.ADMIN] },
   { label: '推廣中心', path: '/referral', icon: Users, roles: [UserRole.PROMOTER, UserRole.ADMIN] },
   { label: '共生商城', path: '/shop', icon: ShoppingBag, roles: [UserRole.MEMBER, UserRole.INVESTOR, UserRole.PROMOTER, UserRole.TEACHER, UserRole.ADMIN] },
@@ -43,16 +43,14 @@ export const MobileLayout: React.FC<LayoutProps> = ({ children, role, onLogout }
     if (path === '/rewards') return '獎金透明';
     if (path === '/referral') return '推廣中心';
     if (path === '/admin') return '管理後台';
-    if (path === '/teacher/studio') return '內容管理';
+    if (path.startsWith('/teacher')) return '講師工作台';
     return '首頁';
   };
 
   const title = getTitle();
   const filteredMenu = MENU_ITEMS.filter(item => item.roles.includes(role));
 
-  // Dynamic Tab Bar based on Role
   const renderTabBar = () => {
-    // 1. Member: Home / Courses / Shop / Orders
     if (role === UserRole.MEMBER) {
       return (
         <>
@@ -64,7 +62,6 @@ export const MobileLayout: React.FC<LayoutProps> = ({ children, role, onLogout }
       );
     }
 
-    // 2. Investor: Home (Assets) / Passbook / Shop / Profile
     if (role === UserRole.INVESTOR) {
       return (
         <>
@@ -76,7 +73,6 @@ export const MobileLayout: React.FC<LayoutProps> = ({ children, role, onLogout }
       );
     }
 
-    // 3. Promoter: Home (Stats) / Referral / Shop / Rewards
     if (role === UserRole.PROMOTER) {
       return (
         <>
@@ -88,19 +84,17 @@ export const MobileLayout: React.FC<LayoutProps> = ({ children, role, onLogout }
       );
     }
 
-    // 4. Teacher: Home (Studio) / Courses / Products / Profile
     if (role === UserRole.TEACHER) {
       return (
         <>
-          <TabItem icon={PenTool} label="工作台" isActive={location.pathname === '/'} onClick={() => navigate('/')} />
+          <TabItem icon={Home} label="總覽" isActive={location.pathname === '/'} onClick={() => navigate('/')} />
+          <TabItem icon={PenTool} label="工作台" isActive={location.pathname.startsWith('/teacher')} onClick={() => navigate('/teacher/studio')} />
           <TabItem icon={BookOpen} label="課程庫" isActive={location.pathname.startsWith('/courses')} onClick={() => navigate('/courses')} />
-          <TabItem icon={ShoppingBag} label="商品庫" isActive={location.pathname.startsWith('/shop')} onClick={() => navigate('/shop')} />
-          <TabItem icon={UserIcon} label="我的" isActive={location.pathname === '/orders'} onClick={() => navigate('/orders')} />
+          <TabItem icon={ShoppingBag} label="商城" isActive={location.pathname.startsWith('/shop')} onClick={() => navigate('/shop')} />
         </>
       );
     }
 
-    // Default/Admin
     return (
       <>
         <TabItem icon={Home} label="首頁" isActive={location.pathname === '/'} onClick={() => navigate('/')} />
@@ -113,7 +107,6 @@ export const MobileLayout: React.FC<LayoutProps> = ({ children, role, onLogout }
 
   return (
     <div className="min-h-screen bg-background text-text font-sans pb-20 relative overflow-hidden">
-      {/* Top Header */}
       <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-md px-4 py-3 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-3">
           <button onClick={toggleDrawer} className="p-2 -ml-2 rounded-full hover:bg-gray-100 active:bg-gray-200">
@@ -132,33 +125,24 @@ export const MobileLayout: React.FC<LayoutProps> = ({ children, role, onLogout }
         </div>
       </header>
 
-      {/* Main Content with Transition Wrapper */}
       <main className="px-4 py-4 animate-[fadeIn_0.3s_ease-out]">
         {children}
       </main>
 
-      {/* Mobile Drawer */}
       {isDrawerOpen && (
         <>
-          <div 
-            className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm transition-opacity"
-            onClick={toggleDrawer}
-          />
+          <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm transition-opacity" onClick={toggleDrawer} />
           <div className="fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-2xl transform transition-transform duration-300 flex flex-col">
             <div className="p-6 bg-gradient-to-br from-primary to-amber-600 text-white">
               <div className="flex justify-between items-start mb-4">
-                <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center text-xl font-bold">
-                  廣
-                </div>
+                <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center text-xl font-bold">廣</div>
                 <button onClick={toggleDrawer} className="text-white/80 hover:text-white">
                   <X className="w-6 h-6" />
                 </button>
               </div>
               <h2 className="font-bold text-lg">廣圓科技</h2>
               <p className="text-sm text-white/80">共生生活圈</p>
-              <div className="mt-2 inline-block px-2 py-0.5 rounded-full bg-white/20 text-xs backdrop-blur-sm">
-                {role}
-              </div>
+              <div className="mt-2 inline-block px-2 py-0.5 rounded-full bg-white/20 text-xs backdrop-blur-sm">{role}</div>
             </div>
 
             <nav className="flex-1 overflow-y-auto py-4 px-2 space-y-1">
@@ -167,9 +151,7 @@ export const MobileLayout: React.FC<LayoutProps> = ({ children, role, onLogout }
                   key={item.path}
                   onClick={() => handleNav(item.path)}
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
-                    location.pathname === item.path 
-                      ? 'bg-amber-50 text-primary font-bold shadow-sm' 
-                      : 'text-gray-600 hover:bg-gray-50'
+                    location.pathname === item.path ? 'bg-amber-50 text-primary font-bold shadow-sm' : 'text-gray-600 hover:bg-gray-50'
                   }`}
                 >
                   <item.icon className={`w-5 h-5 ${location.pathname === item.path ? 'text-primary' : 'text-gray-400'}`} />
@@ -179,10 +161,7 @@ export const MobileLayout: React.FC<LayoutProps> = ({ children, role, onLogout }
             </nav>
 
             <div className="p-4 border-t border-gray-100 space-y-2 bg-gray-50">
-               <button 
-                onClick={onLogout}
-                className="w-full flex items-center gap-3 px-4 py-2 text-red-500 text-sm hover:bg-red-50 rounded-lg"
-               >
+               <button onClick={onLogout} className="w-full flex items-center gap-3 px-4 py-2 text-red-500 text-sm hover:bg-red-50 rounded-lg">
                   <LogOut className="w-4 h-4" />
                   <span>登出</span>
                </button>
@@ -192,7 +171,6 @@ export const MobileLayout: React.FC<LayoutProps> = ({ children, role, onLogout }
         </>
       )}
 
-      {/* Bottom Tab Bar */}
       <nav className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-100 pb-safe">
         <div className="flex justify-around items-center h-16">
           {renderTabBar()}
@@ -205,9 +183,7 @@ export const MobileLayout: React.FC<LayoutProps> = ({ children, role, onLogout }
 const TabItem: React.FC<{ icon: any, label: string, isActive: boolean, onClick: () => void }> = ({ icon: Icon, label, isActive, onClick }) => (
   <button 
     onClick={onClick}
-    className={`flex flex-col items-center justify-center w-full h-full space-y-1 transition-colors ${
-      isActive ? 'text-primary' : 'text-gray-400'
-    }`}
+    className={`flex flex-col items-center justify-center w-full h-full space-y-1 transition-colors ${isActive ? 'text-primary' : 'text-gray-400'}`}
   >
     <Icon className={`w-6 h-6 ${isActive ? 'fill-current opacity-20 stroke-2' : 'stroke-2'}`} />
     <span className="text-[10px] font-medium">{label}</span>
